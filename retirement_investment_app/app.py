@@ -42,42 +42,28 @@ def process_calculation(inputs):
             return
 
         with st.spinner("Calculating..."):
-            # If the user uploaded a CSV of rates, use it (overrides other rate inputs)
-            uploaded = inputs.get('uploaded_rates')
-            if uploaded:
-                # pad or truncate to requested years
-                rate_list = list(uploaded)
-                if len(rate_list) < inputs['years']:
-                    rate_list = rate_list + [rate_list[-1]] * (inputs['years'] - len(rate_list))
-                else:
-                    rate_list = rate_list[: inputs['years']]
-
-                balance = variableInvestor(inputs['principal'], rate_list)
-                effective_rate = float(np.mean(rate_list)) if rate_list else 0.0
-                rates_used = rate_list
-
-            else:
-                if inputs['rate_mode'] == RATE_MODE_MARKET:
-                    balance, rates_used, effective_rate = calculate_market_mode(
+         
+            if inputs['rate_mode'] == RATE_MODE_MARKET:
+                    balance, rates_used, average_rate = calculate_market_mode(
                         inputs['principal'], inputs['years'], inputs['market_years']
                     )
                     if balance is None:
                         return
 
-                elif inputs['rate_mode'] == RATE_MODE_FIXED:
-                    balance, rates_used, effective_rate = calculate_fixed_mode(
+            elif inputs['rate_mode'] == RATE_MODE_FIXED:
+                    balance, rates_used, average_rate = calculate_fixed_mode(
                         inputs['principal'], inputs['years'], inputs['fixed_rate']
                     )
 
-                else:
-                    balance, rates_used, effective_rate = calculate_variable_mode(
+            else:
+                    balance, rates_used, average_rate = calculate_variable_mode(
                         inputs['principal'], inputs['years'], inputs['variable_rates_input']
                     )
                     if balance is None:
                         return
 
-            max_expense = maximumExpensed(balance, effective_rate, inputs['lifespan'])
-            duration, breakdown = finallyRetired(balance, max_expense, effective_rate, inputs['lifespan'])
+            max_expense = maximumExpensed(balance, average_rate, inputs['lifespan'])
+            duration, breakdown = finallyRetired(balance, max_expense, average_rate, inputs['lifespan'])
 
             st.session_state.results = {
                 'balance': balance,
@@ -109,15 +95,15 @@ def calculate_market_mode(principal, years, market_years):
         pre_rates = rate_list[-years:]
 
     balance = variableInvestor(principal, pre_rates)
-    effective_rate = float(np.mean(pre_rates)) if pre_rates else 0.0
-    return balance, pre_rates, effective_rate
+    average_rate = float(np.mean(pre_rates)) if pre_rates else 0.0
+    return balance, pre_rates, average_rate
 
 
 def calculate_fixed_mode(principal, years, fixed_rate):
     balance = fixedInvestor(principal, fixed_rate, years)
     rates_used = [fixed_rate] * years
-    effective_rate = fixed_rate
-    return balance, rates_used, effective_rate
+    average_rate = fixed_rate
+    return balance, rates_used, average_rate
 
 
 def calculate_variable_mode(principal, years, variable_rates_input):
@@ -137,8 +123,8 @@ def calculate_variable_mode(principal, years, variable_rates_input):
         rate_list = rate_list[:years]
 
     balance = variableInvestor(principal, rate_list)
-    effective_rate = float(np.mean(rate_list)) if rate_list else 0.0
-    return balance, rate_list, effective_rate
+    average_rate = float(np.mean(rate_list)) if rate_list else 0.0
+    return balance, rate_list, average_rate
 
 
 if __name__ == "__main__":

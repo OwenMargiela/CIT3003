@@ -15,7 +15,7 @@ echo "Activating virtual environment..."
 
 echo "Upgrading pip and installing requirements..."
 python -m pip install --upgrade pip
-python -m pip install -r retirement_investment_app/Documentation/requirements.txt
+python -m pip install -r requirements.txt
 
 echo "Starting Streamlit app..."
 python -m streamlit run retirement_investment_app/app.py
